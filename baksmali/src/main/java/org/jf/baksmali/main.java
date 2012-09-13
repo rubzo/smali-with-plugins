@@ -58,6 +58,9 @@ public class main {
     public static final int MERGE = 32;
     public static final int FULLMERGE = 64;
 
+    private static Plugin plugin;
+    private static boolean loadedPlugin;
+
     static {
         options = new Options();
         basicOptions = new Options();
@@ -67,6 +70,7 @@ public class main {
         InputStream templateStream = baksmali.class.getClassLoader().getResourceAsStream("baksmali.properties");
         Properties properties = new Properties();
         String version = "(unknown)";
+        loadedPlugin = false;
         try {
             properties.load(templateStream);
             version = properties.getProperty("application.version");
@@ -79,6 +83,21 @@ public class main {
      * This class is uninstantiable.
      */
     private main() {
+    }
+
+    private static void loadPlugin(String pluginClassName, String pluginArgs) {
+
+        ClassLoader classLoader = main.class.getClassLoader();
+
+        try {
+            Class pluginClass = classLoader.loadClass(pluginClassName);
+            plugin = (Plugin) pluginClass.newInstance();
+            plugin.init(pluginArgs);
+            loadedPlugin = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     /**
@@ -244,6 +263,11 @@ public class main {
                 case 'T':
                     inlineTable = commandLine.getOptionValue("T");
                     break;
+                case 'P':
+                    String[] pluginOptions = commandLine.getOptionValues("P");
+                    String pluginClass = pluginOptions[0];
+                    String pluginArgs = pluginOptions[1];
+                    loadPlugin(pluginClass, pluginArgs);
                 default:
                     assert false;
             }
@@ -298,6 +322,10 @@ public class main {
                         bootClassPathDirsArray, bootClassPath, extraBootClassPathEntries.toString(),
                         noParameterRegisters, useLocalsDirective, useSequentialLabels, outputDebugInfo, addCodeOffsets,
                         noAccessorComments, registerInfo, verify, ignoreErrors, inlineTable);
+
+                if (loadedPlugin) {
+                    plugin.run(dexFile);
+                }
             }
 
             if ((doDump || write) && !dexFile.isOdex()) {
@@ -476,6 +504,13 @@ public class main {
                 .withArgName("FILE")
                 .create("T");
 
+        Option pluginOption = OptionBuilder.withLongOpt("load-plugin")
+                .withDescription("load a plugin, and give it the loaded DexFile")
+                .hasArgs(2)
+                .withValueSeparator(',')
+                .withArgName("CLASS,\"OPTS\"")
+                .create("P");
+
         basicOptions.addOption(versionOption);
         basicOptions.addOption(helpOption);
         basicOptions.addOption(outputDirOption);
@@ -490,6 +525,7 @@ public class main {
         basicOptions.addOption(codeOffsetOption);
         basicOptions.addOption(noAccessorCommentsOption);
         basicOptions.addOption(apiLevelOption);
+        basicOptions.addOption(pluginOption);
 
         debugOptions.addOption(dumpOption);
         debugOptions.addOption(ignoreErrorsOption);
