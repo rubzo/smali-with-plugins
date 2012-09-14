@@ -37,6 +37,9 @@ import org.jf.util.SmaliHelpFormatter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -85,19 +88,28 @@ public class main {
     private main() {
     }
 
-    private static void loadPlugin(String pluginClassName, String pluginArgs) {
+    private static void loadPlugin(String pluginJarName, String pluginClassName, String pluginArgs) {
+       try {
+            URL url = new URL("jar:file:" + pluginJarName + "!/");
+            URL[] urls = new URL[1];
+            urls[0] = url;
 
-        ClassLoader classLoader = main.class.getClassLoader();
-
-        try {
-            Class pluginClass = classLoader.loadClass(pluginClassName);
+            URLClassLoader classLoader = new URLClassLoader(urls, main.class.getClassLoader());
+            Class pluginClass = Class.forName(pluginClassName, true, classLoader);
             plugin = (Plugin) pluginClass.newInstance();
+
             plugin.init(pluginArgs);
             loadedPlugin = true;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
+        } catch (MalformedURLException exception) {
+            System.err.println("Couldn't find JAR plugin, not loading plugin.");
+        } catch (ClassNotFoundException exception) {
+            System.err.println("Couldn't find specified plugin class, not loading plugin.");
+        } catch (IllegalAccessException exception) {
+            System.err.println("Unable to access specified plugin class (do you need to make it public?), not loading plugin.");
+        } catch (InstantiationException exception) {
+            System.err.println("Unable to instantiate specified plugin class, not loading plugin.");
+        }
     }
 
     /**
@@ -265,9 +277,10 @@ public class main {
                     break;
                 case 'P':
                     String[] pluginOptions = commandLine.getOptionValues("P");
-                    String pluginClass = pluginOptions[0];
-                    String pluginArgs = pluginOptions[1];
-                    loadPlugin(pluginClass, pluginArgs);
+                    String pluginJarName = pluginOptions[0];
+                    String pluginClassName = pluginOptions[1];
+                    String pluginArgs = pluginOptions[2];
+                    loadPlugin(pluginJarName, pluginClassName, pluginArgs);
                 default:
                     assert false;
             }
@@ -505,10 +518,12 @@ public class main {
                 .create("T");
 
         Option pluginOption = OptionBuilder.withLongOpt("load-plugin")
-                .withDescription("load a plugin, and give it the loaded DexFile")
-                .hasArgs(2)
+                .withDescription("load a plugin called CLASS from a JAR, and give it the loaded DexFile, with some OPTS")
+                .hasArgs(3)
                 .withValueSeparator(',')
-                .withArgName("CLASS,\"OPTS\"")
+                .withArgName("JAR")
+                .withArgName("CLASS")
+                .withArgName("\"OPTS\"")
                 .create("P");
 
         basicOptions.addOption(versionOption);
