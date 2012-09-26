@@ -656,6 +656,9 @@ public class MethodAnalyzer {
 
         switch (instruction.opcode) {
             case NOP:
+            case TRACE_START:
+            case TRACE_STOP:
+            case TRACE_DUMP:
                 return true;
             case MOVE:
             case MOVE_FROM16:
@@ -1088,6 +1091,9 @@ public class MethodAnalyzer {
 
         switch (instruction.opcode) {
             case NOP:
+            case TRACE_START:
+            case TRACE_STOP:
+            case TRACE_DUMP:
                 return;
             case MOVE:
             case MOVE_FROM16:

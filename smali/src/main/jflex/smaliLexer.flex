@@ -384,7 +384,7 @@ Type = {PrimitiveType} | {ClassDescriptor} | {ArrayDescriptor}
         return newToken(INSTRUCTION_FORMAT10t);
     }
 
-    "return-void" | "nop" {
+    "return-void" | "nop" | "trace-start" | "trace-stop" | "trace-dump" {
         return newToken(INSTRUCTION_FORMAT10x);
     }
 

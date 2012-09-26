@@ -371,7 +371,10 @@ INSTRUCTION_FORMAT10t
 
 INSTRUCTION_FORMAT10x
 	:	'return-void'
-	|	'nop';
+	|	'nop'
+	| 'trace-start'
+	| 'trace-stop'
+	| 'trace-dump';
 
 INSTRUCTION_FORMAT10x_ODEX
 	:	'return-void-barrier';
