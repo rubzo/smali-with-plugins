@@ -277,10 +277,12 @@ public class main {
                     break;
                 case 'P':
                     String[] pluginOptions = commandLine.getOptionValues("P");
-                    String pluginJarName = pluginOptions[0];
-                    String pluginClassName = pluginOptions[1];
-                    String pluginArgs = pluginOptions[2];
-                    loadPlugin(pluginJarName, pluginClassName, pluginArgs);
+                    if (pluginOptions.length == 3) {
+                    	String pluginJarName = pluginOptions[0];
+                    	String pluginClassName = pluginOptions[1];
+                    	String pluginArgs = pluginOptions[2];
+                    	loadPlugin(pluginJarName, pluginClassName, pluginArgs);
+                    }
                 default:
                     assert false;
             }
@@ -518,12 +520,10 @@ public class main {
                 .create("T");
 
         Option pluginOption = OptionBuilder.withLongOpt("load-plugin")
-                .withDescription("load a plugin called CLASS from a JAR, and give it the loaded DexFile, with some OPTS")
+                .withDescription("load a plugin from a jar file, and give it the loaded DexFile")
                 .hasArgs(3)
                 .withValueSeparator(',')
-                .withArgName("JAR")
-                .withArgName("CLASS")
-                .withArgName("\"OPTS\"")
+                .withArgName("JAR,CLASS,\"PLUGIN OPTS\"")
                 .create("P");
 
         basicOptions.addOption(versionOption);
